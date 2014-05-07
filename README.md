@@ -41,3 +41,4 @@ Features/Config Options
     * __Orange__ _(bad)_ - Closer to the worst than it is to the best cost per income
     * __Red__ _(worst)_ - Has the worst cost per income
 * __"Drip Memory" Confirmation__
+  * Creates a confirmation window when clicking "Drip Memory" for you to answer Yes or No to dripping your memory
