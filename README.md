@@ -22,7 +22,7 @@ $.getScript('https://raw.githubusercontent.com/FlyingKumquat/Datamonster/master/
 Features/Config Options
 -----
 * Show Bottom Bar
-..* Displays a bar on the bottom of the screen that displays the Income, Cost Per Income, and Time Left of each store item.
+...* Displays a bar on the bottom of the screen that displays the Income, Cost Per Income, and Time Left of each store item.
 * Re-Style/Clean DripStat's UI
 * Use Datamonster's Tooltips
 * Show Personal Income Averages
