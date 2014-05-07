@@ -1,5 +1,5 @@
 Datamonster v.1.1
-============
+======
 
 Datamonster is a JavaScript addon for [DripStat](https://dripstat.com/game/).
 
@@ -19,5 +19,12 @@ Alternatively, you can copy & paste the `$.getScript` function directly into the
 $.getScript('https://raw.githubusercontent.com/FlyingKumquat/Datamonster/master/datamonster.js')
 ```
 
-Features/Options
+Features/Config Options
 -----
+* Show Bottom Bar
+* Re-Style/Clean DripStat's UI
+* Use Datamonster's Tooltips
+* Show Personal Income Averages
+* Calculate "Time Left" From 10 Second Average
+* Color-Code Store Items
+* "Drip Memory" Confirmation
