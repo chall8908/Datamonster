@@ -29,7 +29,9 @@ Features/Config Options
 * __Re-Style/Clean DripStat's UI__
   * Changes some of the styling of DripStat's UI _(mainly just to make thing's fit better)_
 * __Use Datamonster's Tooltips__
+  * Makes the store item/upgrade tooltips a little more detailed and 'screen-friendly'
 * __Show Personal Income Averages__
+  * Creates a small display underneath the top progress bar to show averages of how much memory you are making every 1 Second, 10 Seconds, 30 Seconds, and 1 Minute.
 * __Calculate "Time Left" From 10 Second Average__
 * __Color-Code Store Items__
 * __"Drip Memory" Confirmation__
