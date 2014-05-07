@@ -8,13 +8,16 @@ This is not for cheating, it simply displays information you can find out on you
 How to Use/Install
 -----
 Create a Bookmark and name it "Datamonster" (or whatever you want to call it) then copy & paste the below code into the URL text box and click Save. Next, go [DripStat](https://dripstat.com/game/) (wait for the page to fully load) and click the Bookmark you just created. If done correctly, you should see a new option on DripStat's navigation bar that reads "Datamonster".
-```
+```JavaScript
 javascript:(function(){
 	$.getScript('https://raw.githubusercontent.com/FlyingKumquat/Datamonster/master/datamonster.js')
 }());
 ```
 
 Alternatively, you can copy & paste the `$.getScript` function directly into the browser's console (usually accessed by pressing CTRL+SHIFT+I).
-```
+```JavaScript
 $.getScript('https://raw.githubusercontent.com/FlyingKumquat/Datamonster/master/datamonster.js')
 ```
+
+Features/Options
+-----
