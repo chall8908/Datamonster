@@ -31,7 +31,13 @@ Features/Config Options
 * __Use Datamonster's Tooltips__
   * Makes the store item/upgrade tooltips a little more detailed and 'screen-friendly'
 * __Show Personal Income Averages__
-  * Creates a small display underneath the top progress bar to show averages of how much memory you are making every 1 Second, 10 Seconds, 30 Seconds, and 1 Minute.
+  * Creates a small display underneath the top progress bar to show averages of how much memory you are making every 1 Second, 10 Seconds, 30 Seconds, and 1 Minute
 * __Calculate "Time Left" From 10 Second Average__
+  * Calculates the time left (displayed on Datamonster's bottom bar & tooltips) based on the '10 Second' personal income average 
 * __Color-Code Store Items__
+  * Colors all store items/upgrades to reflect their cost per income
+    * __Green__ _(best)_ - Has the best cost per income
+    * __Yellow__ _(good)_ - Closer to the best than it is to the worst cost per income
+    * __Orange__ _(bad)_ - Closer to the worst than it is to the best cost per income
+    * __Red__ _(worst)_ - Has the worst cost per income
 * __"Drip Memory" Confirmation__
