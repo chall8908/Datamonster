@@ -13,3 +13,8 @@ javascript:(function(){
 	$.getScript('https://raw.githubusercontent.com/FlyingKumquat/Datamonster/master/datamonster.js')
 }());
 ```
+
+Alternatively, you can paste the `$.getScript` function directly into the browser's console (usually access by pressing CTRL+SHIFT+I).
+```
+$.getScript('https://raw.githubusercontent.com/FlyingKumquat/Datamonster/master/datamonster.js')
+```
