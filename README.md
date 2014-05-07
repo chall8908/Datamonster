@@ -14,7 +14,7 @@ javascript:(function(){
 }());
 ```
 
-Alternatively, you can copy & paste the `$.getScript` function directly into the browser's console (usually accessed by pressing CTRL+SHIFT+I).
+Alternatively, you can copy & paste the `$.getScript` function directly into the browser's console. Information on how to open your browser's console can be found [here](http://webmasters.stackexchange.com/questions/8525/how-to-open-the-javascript-console-in-different-browsers).
 ```JavaScript
 $.getScript('https://raw.githubusercontent.com/FlyingKumquat/Datamonster/master/datamonster.js')
 ```
