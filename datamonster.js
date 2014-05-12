@@ -1,4 +1,4 @@
-var _version = 'v.1.1';
+var _version = 'v.1.2';
 var _DM_Data = new Object();
 var _storeInfo = new Object();
 var _estimatedBps = new Object(); // count, last byte count, eBPS
@@ -7,6 +7,10 @@ var _DM_Config_Open = false;
 var _DM_Tooltip_Last = '';
 var _DM_Tooltip_Toggle = false;
 var _DM_Color_Items_Toggle = false;
+var _DM_Player_Score_Counter = 0;
+var _DM_Player_Score_Update = 30000; //milliseconds
+var _lb = [];
+var _mm = [0,0];
 var sts_type = new Array(
 	[' bytes', ' KB', ' MB', ' GB', ' TB', ' PB']
 );
@@ -65,6 +69,17 @@ function Load_Data_Monster(){
 	$('#DM_Drip_Auth_Yes').bind("click",function(){ Drip_Auth_Click(true); });
 	$('#DM_Drip_Auth_No').bind("click",function(){ Drip_Auth_Click(false); });
 	
+	$('#dripChartTabs').append('<li id="DM_Player_Scores_Tab" style="display:none;"><a href="#DM_Player_Scores" data-toggle="tab" style="display:block;">Player Scores</a></li>');
+	$($('#jvmTab').parent()).append('<div id="DM_Player_Scores" class="tab-pane" style="visibility: visible;"></div>');
+	
+	// this looks dumb, but it fixes an issue with pops
+	$('#DM_Player_Scores_Tab').bind("click", function(e){
+		if(e.isTrigger != 3){
+			$($('#DM_Player_Scores_Tab').parent().children()[2]).find('a').click()
+			$('#DM_Player_Scores_Tab').find('a').click();
+		}
+	});
+	
 	Init_Options();
 	
 	$($($('.navbar-nav')[0]).children()[1]).html('<a style="cursor:pointer;"><i class="fa fa-gamepad"></i>&nbsp;Game</a>');
@@ -120,9 +135,88 @@ function Main_Loop(){
 	Check_Tooltips();
 	Manage_Coloring();
 	Manage_Drip_Auth();
+	Manage_Player_Scores_Tab();
     setTimeout(function (){
         Main_Loop();
     },100)
+}
+
+function Get_Leaderboard_Data(e){
+/* ###################################################
+	original/unmodified function was copied from:
+	https://gist.github.com/quizunder/11301368
+################################################### */
+	_mm[0]++;
+	user = e.lb[2];
+	_lb.push(e.lb[2]);
+
+	if(user.rank == 3 || _mm[0] == _mm[1]){
+		_lb.push(e.lb[1]);
+		_lb.push(e.lb[0]);
+		Handle_Leaderboard_Data(_lb.reverse());
+	} else { $.post(GAME_URL + "lb", { name: e.lb[1].name }, Get_Leaderboard_Data); }
+}
+
+function Generate_Leaderboard(name, max){
+	$('#DM_Player_Scores_Tab a').html('<i class="fa fa-spinner fa-spin"></i> Player Scores');
+	_lb = [];
+	_mm = [0,max];
+	$.post(GAME_URL + "lb", { name: name }, Get_Leaderboard_Data);
+}
+
+function Handle_Leaderboard_Data(obj){
+	var user = obj[obj.length-1];
+	var out = '<table class="table table-condensed">'
+		+ '<thead><tr>'
+			+ '<th>Rank</th>'
+			+ '<th>Name</th>'
+			+ '<th>Score</th>'
+			+ '<th>Difference</th>'
+		+ '</tr></thead><tbody>';
+	jQuery.each(obj, function(i, o){
+		var diff = '+' + formatNum(o.score - user.score);
+		var cls = '';
+		if(o.name == user.name){
+			diff = '';
+			cls = ' class="success" ';
+		}
+		out += '<tr' + cls + '>'
+			+ '<td>' + o.rank + '</td>'
+			+ '<td>' + o.name + '</td>'
+			+ '<td>' + formatNum(o.score) + '</td>'
+			+ '<td style="color:#2fa968;">' + diff + '</td>'
+		+ '</tr>';
+	});
+	out += '<tr><td colspan=3 align=right><b>Next Update:</b></td><td align=left id="DM_Player_Scores_Update">' + formatTime(_DM_Player_Score_Update/1000) + '</td></tr>';
+	out += '</tbody></table>';
+	$('#DM_Player_Scores').html(out);
+	$('#DM_Player_Scores_Tab a').html('Player Scores');
+}
+
+function Manage_Player_Scores_Tab(){
+	if(_DM_Data['Player Scores'] && $('#DM_Player_Scores_Tab').is(':hidden')){
+		_DM_Player_Score_Counter = 0;
+		Generate_Leaderboard(networkUser.userName, 5);
+		$('#DM_Player_Scores_Tab').fadeIn(100);
+	} else if(_DM_Data['Player Scores']){
+		_DM_Player_Score_Counter++;
+		$('#DM_Player_Scores_Update').text(formatTime((_DM_Player_Score_Update - (_DM_Player_Score_Counter * 100))/1000, ''));
+		if(_DM_Player_Score_Counter >= _DM_Player_Score_Update/100){
+			_DM_Player_Score_Counter = 0;
+			Generate_Leaderboard(networkUser.userName, 5);
+		}
+	}
+	
+	if(!_DM_Data['Player Scores'] && !$('#DM_Player_Scores_Tab').is(':hidden')){
+		$('#DM_Player_Scores_Tab').fadeOut(100);
+		$('#DM_Player_Scores_Tab').attr('class', '');
+		if(!$('#DM_Player_Scores').is(':hidden')){
+			$('#DM_Player_Scores').removeClass('active');
+			$($($('#dripChartTabs')).children()[2]).click();
+			$($($('#dripChartTabs')).children()[2]).attr('class', 'active');
+			$('#jvmTab').addClass('active');
+		}
+	}
 }
 
 function Manage_Drip_Auth(){
@@ -510,6 +604,7 @@ function Init_Options(){
 	$('#DM_Option_4').bind("change",function(){ Save_DM_Data(); });
 	$('#DM_Option_5').bind("change",function(){ Save_DM_Data(); });
 	$('#DM_Option_6').bind("change",function(){ Save_DM_Data(); });
+	$('#DM_Option_7').bind("change",function(){ Save_DM_Data(); });
 }
 
 function Load_DM_Data(){
@@ -550,6 +645,9 @@ function Save_DM_Data(){
 	if($('#DM_Option_6').is(':checked')) { obj['Drip Check'] = true; }
 	else { obj['Drip Check'] = false; }
 	
+	if($('#DM_Option_7').is(':checked')) { obj['Player Scores'] = true; }
+	else { obj['Player Scores'] = false; }
+	
 	if (typeof Storage !== "undefined"){
 		localStorage.DM_Data = JSON.stringify(obj);
 	}
@@ -577,6 +675,9 @@ function Handle_Loaded_Data(){
 	
 	if(_DM_Data['Drip Check']) { $('#DM_Option_6').prop('checked', true); }
 	else { $('#DM_Option_6').prop('checked', false);}
+	
+	if(_DM_Data['Player Scores']) { $('#DM_Option_7').prop('checked', true); }
+	else { $('#DM_Option_7').prop('checked', false);}
 }
 
 function DM_Config_Display(){
@@ -614,6 +715,9 @@ function DM_Config_Display(){
 					+ '</div>'
 					+ '<div class="DM_Config_Item">'
 						+ '<label><input type="checkbox" id="DM_Option_6"> "Drip Memory" Confirmation</label>'
+					+ '</div>'
+					+ '<div class="DM_Config_Item">'
+						+ '<label><input type="checkbox" id="DM_Option_7"> Show "Player Scores" Tab</label>'
 					+ '</div>'
 				+ '</div>'
 			+ '</div>'
@@ -826,42 +930,43 @@ function Get_Item_Name_Display(name){
 
 function _sts(e, tf) {
 	var num = 1;
-    if (num > 0) {
+	if (num > 0) {
 		var mult = 1e15;
 		for(var i = sts_type[num-1].length-1; i >= 0; i--) {
 			var hold = (e / mult % 999).toFixed(2);
 			if(hold >=1 ) return hold + sts_type[num-1][i];
 			mult /= 1e3;
 		}
-    }
+	}
 	if(tf) { return Math.round(e); }
-    return Math.round(e * 100) / 100;
+	return Math.round(e * 100) / 100;
 }
 
 function formatNum(e) {
-    return _sts(e, false).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+	return _sts(e, false).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 }
 
 function formatTime(e, t) {
-    e = Math.round(e);
-    if (e == Infinity) { return "Never"; }
-    if (e == 0) { return "Done!"; }
-    if (e / 86400 > 1e3) { return "> 1,000 days"; }
-    var n = parseInt(e / 86400) % 999;
-    var r = parseInt(e / 3600) % 24;
-    var i = parseInt(e / 60) % 60;
-    var s = e % 60;
-    var o = new Array(" days, ", " hours, ", " minutes, ", " seconds");
-    if (t != "min") {
-        if (n == 1) { o[0] = " day, "; }
-        if (r == 1) { o[1] = " hour, "; }
-        if (i == 1) { o[2] = " minute, "; }
-        if (s == 1) { o[3] = " second"; }
-    } else { o = new Array("d, ", "h, ", "m, ", "s"); }
-    var u = '';
+	e = Math.round(e);
+	if (e == Infinity) { return "Calculating"; }
+	if (e == 0 && t == 'min') { return "Done!"; }
+	else if (e == 0) { return "0 seconds"; }
+	if (e / 86400 > 1e3) { return "> 1,000 days"; }
+	var n = parseInt(e / 86400) % 999;
+	var r = parseInt(e / 3600) % 24;
+	var i = parseInt(e / 60) % 60;
+	var s = e % 60;
+	var o = new Array(" days, ", " hours, ", " minutes, ", " seconds");
+	if (t != "min") {
+		if (n == 1) { o[0] = " day, "; }
+		if (r == 1) { o[1] = " hour, "; }
+		if (i == 1) { o[2] = " minute, "; }
+		if (s == 1) { o[3] = " second"; }
+	} else { o = new Array("d, ", "h, ", "m, ", "s"); }
+	var u = '';
 	if(n > 0) { u = u + n + o[0]; }
 	if(n > 0 || r > 0) { u = u + r + o[1]; }
 	if(n > 0 || r > 0 || i > 0) { u = u + i + o[2]; }
 	if(n > 0 || r > 0 || i > 0 || s > 0) { u = u + s + o[3]; }
-    return u
+	return u
 }
