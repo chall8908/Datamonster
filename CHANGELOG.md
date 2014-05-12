@@ -1,3 +1,9 @@
+## v.1.2 _(5/12/14)_
+
+New Features:
+* __Show "Player Scores" Tab__
+  * Enables a new tab that shows a list of the next 5 people ahead of you in score _(updates every 30 seconds)_
+
 ## v.1.1 _(5/7/14)_
 
 Bugfixes:
