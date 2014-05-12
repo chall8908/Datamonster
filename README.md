@@ -1,4 +1,4 @@
-Datamonster v.1.1
+Datamonster v.1.2
 ======
 
 Datamonster is a JavaScript addon for [DripStat](https://dripstat.com/game/).
@@ -42,3 +42,5 @@ Features/Config Options
     * __Red__ _(worst)_ - Has the worst cost per income
 * __"Drip Memory" Confirmation__
   * Creates a confirmation window when clicking "Drip Memory" for you to answer Yes or No to dripping your memory
+* __Show "Player Scores" Tab__
+  * Enables a new tab that shows a list of the next 5 people ahead of you in score _(updates every 30 seconds)_
