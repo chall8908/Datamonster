@@ -1,8 +1,9 @@
-var _version = 'v.1.2';
+var _version = 'v.1.3';
 var _DM_Data = new Object();
 var _storeInfo = new Object();
-var _estimatedBps = new Object(); // count, last byte count, eBPS
-var _estimatedBpsGlobal = new Object(); // count, last byte count, eBPS
+var _byteArray = [];
+var _byteArrayGlobal = [];
+var _byteArrayCnt = 0;
 var _DM_Config_Open = false;
 var _DM_Tooltip_Last = '';
 var _DM_Tooltip_Toggle = false;
@@ -21,7 +22,7 @@ function Load_Data_Monster(){
 	$("head").append("<style id='datamonster_style'></style>");
 	$("#datamonster_style").text(''
 		+ '#DM_Bar { font-size:12px; position:fixed; z-index:999; bottom:0px; width:100%; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black !important; color:white; cursor:default; display:none; line-height:normal; padding-bottom:2px; }'
-		+ '#DM_Bar table th, #DM_Personal_Averages table th { text-align:center; }'
+		+ '#DM_Bar table th, #DM_Personal_Averages table th, #DM_Global_Averages table th, #DM_Global_Averages table td { text-align:center; }'
 		+ '#DM_Config { cursor:pointer; color:#71accb; }'
 		+ '#DM_Config:hover, .active #DM_Config { color:#c1e7fa; }'
 		+ '#DM_Config_Panel { z-index:999; position:absolute; top:50px; left:0px; right:0px; height:0px; background-color:#080808; box-sizing: border-box; border-bottom:1px solid #101010; overflow:hidden; }'
@@ -30,8 +31,8 @@ function Load_Data_Monster(){
 		+ '.DM_Config_Item { line-height:22px; padding:6px; }'
 		+ '.DM_Config_Item input[type=checkbox] { position:relative; top:2px; }'
 		+ '.DM_Config_Item label { margin:0px; }'
-		+ '#DM_Personal_Averages { display:none; cursor:default; }'
-		+ '#DM_Personal_Averages table th { border-bottom:1px solid #666666; }'
+		+ '#DM_Personal_Averages, #DM_Global_Averages { display:none; cursor:default; }'
+		+ '#DM_Personal_Averages table th, #DM_Global_Averages table th { border-bottom:1px solid #666666; }'
 		+ '#pops { z-index:997; }'
 		+ '#upgrades { overflow:visible; }'
 		+ '#powerupstore { background-color:white; }'
@@ -56,6 +57,7 @@ function Load_Data_Monster(){
 		+ '.DM_Item_Worst:hover { background-color:#ff8f7e !important; } '
 		+ '#DM_Drip_Auth_Overlay { display:none; position:fixed; z-index:1001; top:0px; left:0px; bottom:0px; right:0px; background:rgba(0,0,0,0.5); }'
 		+ '#DM_Drip_Auth_Window { position:absolute; width:350px; top:200px; left:50%; margin-left:-175px; box-sizing:border-box; -webkit-box-shadow: 5px 5px 15px 0px rgba(0,0,0,0.75); -moz-box-shadow: 5px 5px 15px 0px rgba(0,0,0,0.75); box-shadow: 5px 5px 15px 0px rgba(0,0,0,0.75); } '
+		+ '#DM_Global_Time_Left { position:absolute; right:1px; bottom:2px; color:#52274D; font-family: Consolas,monospace,sans-serif; font-weight:bold; font-size:12px; width:50%; text-align:center; }'
 	+ '');
 
 	$("head").append("<style id='datamonster_style_optional'></style>");
@@ -71,6 +73,8 @@ function Load_Data_Monster(){
 	
 	$('#dripChartTabs').append('<li id="DM_Player_Scores_Tab" style="display:none;"><a href="#DM_Player_Scores" data-toggle="tab" style="display:block;">Player Scores</a></li>');
 	$($('#jvmTab').parent()).append('<div id="DM_Player_Scores" class="tab-pane" style="visibility: visible;"></div>');
+	
+	$($('#globalProgressBar').parent()).append('<span id="DM_Global_Time_Left" style="display:none;"></span>');
 	
 	// this looks dumb, but it fixes an issue with pops
 	$('#DM_Player_Scores_Tab').bind("click", function(e){
@@ -100,18 +104,14 @@ function Load_Data_Monster(){
 	});
 	
 	$($('#bps-current').parent()).append('<div id="DM_Personal_Averages"></div>');
+	$('#globaltab').append('<div id="DM_Global_Averages"></div>');
 	
 	var curBytes = localStats.byteCount;
-	_estimatedBps[1] = [0,curBytes,0];
-	_estimatedBps[10] = [0,curBytes,0];
-	_estimatedBps[30] = [0,curBytes,0];
-	_estimatedBps[60] = [0,curBytes,0];
-	
-	var curBytesGlobal = globalStats.remainingBytes();
-	_estimatedBpsGlobal[30] = [0,curBytesGlobal,0];
-	_estimatedBpsGlobal[60] = [0,curBytesGlobal,0];
-	_estimatedBpsGlobal[180] = [0,curBytesGlobal,0];
-	_estimatedBpsGlobal[600] = [0,curBytesGlobal,0];
+	var curBytesGlobal = globalStats.usedBytes;
+	for(var i = 0; i <= 600; i++){
+		_byteArray[i] = curBytes;
+		_byteArrayGlobal[i] = curBytesGlobal;
+	}
 	
 	jQuery.each($('#powerupstore .storeItem'), function(i, e){
 		$(this).bind("click",function(){ Calculate_Items(); Manage_Tooltips(i); });
@@ -121,6 +121,7 @@ function Load_Data_Monster(){
 	
 	Make_Table();
 	Make_Personal_Averages_Table();
+	Make_Global_Averages_Table();
 	Load_DM_Data();
 	Handle_Loaded_Data();
 	Main_Loop();
@@ -132,13 +133,43 @@ function Main_Loop(){
 	Update_Table();
 	Check_Styling();
 	Check_Personal_Averages();
+	Check_Global_Averages();
 	Check_Tooltips();
 	Manage_Coloring();
 	Manage_Drip_Auth();
 	Manage_Player_Scores_Tab();
+	Manage_Global_Time_Left();
     setTimeout(function (){
         Main_Loop();
     },100)
+}
+
+function Manage_Global_Time_Left(){
+	if(_DM_Data['Global Time Left'] && $('#DM_Global_Time_Left').is(':hidden')){
+		$('#DM_Global_Time_Left').show();
+		$('#global-heap-count-remaining').css('width', '50%');
+	} else if(!_DM_Data['Global Time Left'] && !$('#DM_Global_Time_Left').is(':hidden')){
+		$('#DM_Global_Time_Left').hide();
+		$('#global-heap-count-remaining').css('width', '');
+	}
+	
+	if(_DM_Data['Global Time Left']){
+		Update_Global_Time_Left();
+	}
+}
+
+function Update_Global_Time_Left(){
+	var left = formatTime(globalStats.remainingBytes() / Grab_Average(600,false));
+	if(left.indexOf('minutes') > 0){
+		left = left.substr(0, left.indexOf('minutes') + 7);
+	}
+	if(globalStats.remainingBytes() == 0){
+		left = 'awaiting next level';
+	}
+	if(left == ''){
+		left = 'calculating...';
+	}
+	$('#DM_Global_Time_Left').html(left);
 }
 
 function Get_Leaderboard_Data(e){
@@ -345,7 +376,7 @@ function Update_Tooltip_Time(){
 		if(ele.length > 0){
 
 			var avgBps = ls.bps
-			if(_DM_Data['Time Left Average']){ avgBps = _estimatedBps[10][2]; }
+			if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
 			var time = (o.currentPrice - ls.byteCount) / avgBps;
 			if(time < 0) { time = 0; }
 
@@ -365,7 +396,7 @@ function Update_Tooltip_Time(){
 		if(ele.length > 0){
 
 			var avgBps = ls.bps
-			if(_DM_Data['Time Left Average']){ avgBps = _estimatedBps[10][2]; }
+			if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
 			var time = (o.price - ls.byteCount) / avgBps;
 			if(time < 0) { time = 0; }
 
@@ -566,13 +597,11 @@ function Check_Styling(){
 		$("#datamonster_style_optional").text('');
 	}
 	
-	/*
-	if(_DM_Data['Hide Upgrades'] && $("#upgrades").text() == '' && $("#upgrades").is(":visible")){
-		$("#upgrades").hide();
-	} else if(!_DM_Data['Hide Upgrades'] && !$("#upgrades").is(":visible")){
-		$("#upgrades").show();
+	if(_DM_Data['Clean Dripstat'] && $('#upgrades').html() == '' && $("#datamonster_style_optional").text().indexOf('important') < 0){
+		$("#datamonster_style_optional").append('#upgrades:hover { margin-bottom:0px !important; }');
+	}else if(_DM_Data['Clean Dripstat'] && $('#upgrades').html() != '' && $("#datamonster_style_optional").text().indexOf('important') > 0){
+		$("#datamonster_style_optional").text($("#datamonster_style_optional").text().replace('#upgrades:hover { margin-bottom:0px !important; }', ''));
 	}
-	*/
 }
 
 function Check_Personal_Averages(){
@@ -596,15 +625,22 @@ function Check_Personal_Averages(){
 	}
 }
 
+function Check_Global_Averages(){
+	if(_DM_Data['Show Global Averages'] && $('#DM_Global_Averages').is(':hidden')){
+		$('#DM_Global_Averages').show();
+	} else if(!_DM_Data['Show Global Averages'] && !$('#DM_Global_Averages').is(':hidden')){
+		$('#DM_Global_Averages').hide();
+	}
+	
+	if(_DM_Data['Show Global Averages']){
+		Update_Global_Averages();
+	}
+}
+
 function Init_Options(){
-	$('#DM_Option_0').bind("change",function(){ Save_DM_Data(); });
-	$('#DM_Option_1').bind("change",function(){ Save_DM_Data(); });
-	$('#DM_Option_2').bind("change",function(){ Save_DM_Data(); });
-	$('#DM_Option_3').bind("change",function(){ Save_DM_Data(); });
-	$('#DM_Option_4').bind("change",function(){ Save_DM_Data(); });
-	$('#DM_Option_5').bind("change",function(){ Save_DM_Data(); });
-	$('#DM_Option_6').bind("change",function(){ Save_DM_Data(); });
-	$('#DM_Option_7').bind("change",function(){ Save_DM_Data(); });
+	for(var i = 0; i < 10; i++){
+		$('#DM_Option_' + i).bind("change",function(){ Save_DM_Data(); });
+	}
 }
 
 function Load_DM_Data(){
@@ -648,6 +684,12 @@ function Save_DM_Data(){
 	if($('#DM_Option_7').is(':checked')) { obj['Player Scores'] = true; }
 	else { obj['Player Scores'] = false; }
 	
+	if($('#DM_Option_8').is(':checked')) { obj['Show Global Averages'] = true; }
+	else { obj['Show Global Averages'] = false; }
+	
+	if($('#DM_Option_9').is(':checked')) { obj['Global Time Left'] = true; }
+	else { obj['Global Time Left'] = false; }
+	
 	if (typeof Storage !== "undefined"){
 		localStorage.DM_Data = JSON.stringify(obj);
 	}
@@ -678,6 +720,12 @@ function Handle_Loaded_Data(){
 	
 	if(_DM_Data['Player Scores']) { $('#DM_Option_7').prop('checked', true); }
 	else { $('#DM_Option_7').prop('checked', false);}
+	
+	if(_DM_Data['Show Global Averages']) { $('#DM_Option_8').prop('checked', true); }
+	else { $('#DM_Option_8').prop('checked', false);}
+	
+	if(_DM_Data['Global Time Left']) { $('#DM_Option_9').prop('checked', true); }
+	else { $('#DM_Option_9').prop('checked', false);}
 }
 
 function DM_Config_Display(){
@@ -703,16 +751,25 @@ function DM_Config_Display(){
 						+ '<label><input type="checkbox" id="DM_Option_2"> Use Datamonster\'s Tooltips</label>'
 					+ '</div>'
 					+ '<div class="DM_Config_Item">'
-						+ '<label><input type="checkbox" id="DM_Option_3"> Show Personal Income Averages</label>'
+						+ '<label><input type="checkbox" id="DM_Option_5"> Color-Code Store Items</label>'
 					+ '</div>'
+					
 				+ '</div>'
 				+ '<div class="col-md-4" style="border-left:1px solid #333333;">'
+					+ '<div class="DM_Config_Item">'
+						+ '<label><input type="checkbox" id="DM_Option_8"> Show Global Income Averages</label>'
+					+ '</div>'
+					+ '<div class="DM_Config_Item">'
+						+ '<label><input type="checkbox" id="DM_Option_3"> Show Personal Income Averages</label>'
+					+ '</div>'
 					+ '<div class="DM_Config_Item">'
 						+ '<label><input type="checkbox" id="DM_Option_4"> Calculate "Time Left" From 10 Second Average</label>'
 					+ '</div>'
 					+ '<div class="DM_Config_Item">'
-						+ '<label><input type="checkbox" id="DM_Option_5"> Color-Code Store Items</label>'
+						+ '<label><input type="checkbox" id="DM_Option_9"> Show Global Time Left Estimate</label>'
 					+ '</div>'
+				+ '</div>'
+				+ '<div class="col-md-4" style="border-left:1px solid #333333;">'
 					+ '<div class="DM_Config_Item">'
 						+ '<label><input type="checkbox" id="DM_Option_6"> "Drip Memory" Confirmation</label>'
 					+ '</div>'
@@ -745,48 +802,60 @@ function Make_Personal_Averages_Table(){
 	$('#DM_Personal_Averages').html(out);
 }
 
+function Make_Global_Averages_Table(){
+	var out = '<table style="width:100%; table-layout:fixed;">'
+		+ '<tr style="color:#333333;">'
+			+ '<th>1 Minute</th>'
+			+ '<th>3 Minute</th>'
+			+ '<th>5 Minute</th>'
+			+ '<th>10 Minute</th>'
+		+ '</tr>'
+		+ '<tr style="color:coral; font-size:14; font-weight:bolder;">'
+			+ '<td id="DM_Global_60"></td>'
+			+ '<td id="DM_Global_180"></td>'
+			+ '<td id="DM_Global_300"></td>'
+			+ '<td id="DM_Global_600"></td>'
+		+ '</tr>'
+	+ '</table>';
+	$('#DM_Global_Averages').html(out);
+}
+
 function Update_Personal_Averages(){
 	$('#DM_Personal_Game').text(formatNum(localStats.bps) + '/s');
-	$('#DM_Personal_1').text(formatNum(_estimatedBps[1][2]) + '/s');
-	$('#DM_Personal_10').text(formatNum(_estimatedBps[10][2]) + '/s');
-	$('#DM_Personal_30').text(formatNum(_estimatedBps[30][2]) + '/s');
-	$('#DM_Personal_60').text(formatNum(_estimatedBps[60][2]) + '/s');
+	$('#DM_Personal_1').text(formatNum(Grab_Average(1,true)) + '/s');
+	$('#DM_Personal_10').text(formatNum(Grab_Average(10,true)) + '/s');
+	$('#DM_Personal_30').text(formatNum(Grab_Average(30,true)) + '/s');
+	$('#DM_Personal_60').text(formatNum(Grab_Average(60,true)) + '/s');
+}
+
+function Update_Global_Averages(){
+	$('#DM_Global_60').text(formatNum(Grab_Average(60,false)) + '/s');
+	$('#DM_Global_180').text(formatNum(Grab_Average(180,false)) + '/s');
+	$('#DM_Global_300').text(formatNum(Grab_Average(300,false)) + '/s');
+	$('#DM_Global_600').text(formatNum(Grab_Average(600,false)) + '/s');
+}
+
+function Grab_Average(n, type){
+	var ary = [];
+	if(type){
+	// Personal
+		ary = _byteArray;
+	}else{
+	// Global
+		ary = _byteArrayGlobal;
+	}
+	return (ary[0] - ary[n]) / n;
 }
 
 function Calculate_Estimates(){
-	Calculate_Estimated_BPS(1);
-	Calculate_Estimated_BPS(10);
-	Calculate_Estimated_BPS(30);
-	Calculate_Estimated_BPS(60);
-	
-	Calculate_Estimated_BPS_Global(30);
-	Calculate_Estimated_BPS_Global(60);
-	Calculate_Estimated_BPS_Global(180);
-	Calculate_Estimated_BPS_Global(600);
-}
-
-function Calculate_Estimated_BPS(type){
-	if(_estimatedBps[type][0] >= type * 10){ // counter (100ms per loop)
-		var current = localStats.byteCount;
-		var last = _estimatedBps[type][1];
-		var increase = current - last;
-		_estimatedBps[type][2] = increase / type;
-		_estimatedBps[type][1] = current;
-		_estimatedBps[type][0] = 0; // reset counter
+	if(_byteArrayCnt >= 9){
+		_byteArrayCnt = 0;
+		_byteArray.splice(_byteArray.length-1,1);
+		_byteArrayGlobal.splice(_byteArrayGlobal.length-1,1);
+		_byteArray.unshift(localStats.byteCount);
+		_byteArrayGlobal.unshift(globalStats.usedBytes);
 	}
-	_estimatedBps[type][0]++; // increment counter
-}
-
-function Calculate_Estimated_BPS_Global(type){
-	if(_estimatedBpsGlobal[type][0] >= type * 10){ // counter (100ms per loop)
-		var current = globalStats.remainingBytes();
-		var last = _estimatedBpsGlobal[type][1];
-		var decrease = last - current;
-		_estimatedBpsGlobal[type][2] = decrease / type;
-		_estimatedBpsGlobal[type][1] = current;
-		_estimatedBpsGlobal[type][0] = 0; // reset counter
-	}
-	_estimatedBpsGlobal[type][0]++; // increment counter
+	_byteArrayCnt++;
 }
 
 function Calculate_Items(){
@@ -817,7 +886,7 @@ function Calculate_Items(){
 		}
 		
 		var avgBps = ls.bps
-		if(_DM_Data['Time Left Average']){ avgBps = _estimatedBps[10][2]; }
+		if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
 		var time = (o.currentPrice - ls.byteCount) / avgBps;
 		if(time < 0) { time = 0; }
 		if(time != 0){
@@ -849,7 +918,7 @@ function Calculate_Items(){
 		}
 		
 		var avgBps = ls.bps
-		if(_DM_Data['Time Left Average']){ avgBps = _estimatedBps[10][2]; }
+		if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
 		var time = (o.price - ls.byteCount) / avgBps;
 		if(time < 0) { time = 0; }
 		if(time != 0){
@@ -895,7 +964,7 @@ function Update_Table(){
 		items.forEach(function(e,t){
 			var time = 0;
 			var avgBps = localStats.bps
-			if(_DM_Data['Time Left Average']){ avgBps = _estimatedBps[10][2]; }
+			if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
 			if(e.currentPrice - localStats.byteCount > 0){ time = (e.currentPrice - localStats.byteCount) / avgBps; }
 			if(time < 0 ) { time = 0; }
 			var n = Get_Item_Name_Display(e.name);
@@ -914,7 +983,7 @@ function Update_Table(){
 			$('#DM_Item_Name_' + t).html(n + ' (<span style="color:#4bb8f0;">' + e.count + '</span>)');
 			$('#DM_Item_Income_' + t).html(formatNum(e.currentBps) + '/s');
 			$('#DM_Item_CPI_' + t).html('<span style="color:' + c[0] + '">' + formatNum(v) + '</span>');
-			$('#DM_Item_Time_' + t).html('<span style="color:' + c[1] + '">' +formatTime(time, 'min') + '</span>');
+			$('#DM_Item_Time_' + t).html('<span style="color:' + c[1] + '">' + formatTime(time, 'min') + '</span>');
 		});
 	} else {
 		if($('#DM_Bar').is(":visible")) { $('#DM_Bar').fadeOut(100); $("body").css('margin-bottom','0px'); }
@@ -948,7 +1017,7 @@ function formatNum(e) {
 
 function formatTime(e, t) {
 	e = Math.round(e);
-	if (e == Infinity) { return "Calculating"; }
+	if (e == Infinity) { return "calculating..."; }
 	if (e == 0 && t == 'min') { return "Done!"; }
 	else if (e == 0) { return "0 seconds"; }
 	if (e / 86400 > 1e3) { return "> 1,000 days"; }
