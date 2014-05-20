@@ -1,8 +1,7 @@
 var _version = 'v.1.3';
 var _DM_Data = new Object();
 var _storeInfo = new Object();
-var _byteArray = [];
-var _byteArrayGlobal = [];
+var _byteInfo = new Object();
 var _byteArrayCnt = 0;
 var _DM_Config_Open = false;
 var _DM_Tooltip_Last = '';
@@ -106,11 +105,15 @@ function Load_Data_Monster(){
 	$($('#bps-current').parent()).append('<div id="DM_Personal_Averages"></div>');
 	$('#globaltab').append('<div id="DM_Global_Averages"></div>');
 	
-	var curBytes = localStats.byteCount;
-	var curBytesGlobal = globalStats.usedBytes;
+	_byteInfo['Personal'] = [];
+	_byteInfo['Global'] = [];
+	_byteInfo['Hold'] = new Object();
+	_byteInfo['Hold']['Personal Last'] = localStats.byteCount;
+	_byteInfo['Hold']['Global Last'] = globalStats.usedBytes;
+	_byteInfo['Hold']['Time Last'] = Date.now();
 	for(var i = 0; i <= 600; i++){
-		_byteArray[i] = curBytes;
-		_byteArrayGlobal[i] = curBytesGlobal;
+		_byteInfo['Personal'][i] = 0;
+		_byteInfo['Global'][i] = 0;
 	}
 	
 	jQuery.each($('#powerupstore .storeItem'), function(i, e){
@@ -128,6 +131,7 @@ function Load_Data_Monster(){
 }
 
 function Main_Loop(){
+	var timeNow = Date.now();
 	Calculate_Estimates();
 	Calculate_Items();
 	Update_Table();
@@ -141,7 +145,7 @@ function Main_Loop(){
 	Manage_Global_Time_Left();
     setTimeout(function (){
         Main_Loop();
-    },100)
+    },100 - (Date.now() - timeNow)) // "true" 100ms
 }
 
 function Manage_Global_Time_Left(){
@@ -839,22 +843,37 @@ function Grab_Average(n, type){
 	var ary = [];
 	if(type){
 	// Personal
-		ary = _byteArray;
+		ary = _byteInfo['Personal'];
 	}else{
 	// Global
-		ary = _byteArrayGlobal;
+		ary = _byteInfo['Global'];
 	}
-	return (ary[0] - ary[n]) / n;
+	var tmp = 0;
+	for(var i = 0; i < n; i++){ tmp += ary[i]; }
+	return tmp/n;
 }
 
 function Calculate_Estimates(){
 	_byteArrayCnt++;
 	if(_byteArrayCnt >= 10){
 		_byteArrayCnt = 0;
-		_byteArray.splice(_byteArray.length-1,1);
-		_byteArrayGlobal.splice(_byteArrayGlobal.length-1,1);
-		_byteArray.unshift(localStats.byteCount);
-		_byteArrayGlobal.unshift(globalStats.usedBytes);
+		var obj = new Object();
+			obj['Time Now'] = Date.now();
+			obj['Time Diff'] = obj['Time Now'] - _byteInfo['Hold']['Time Last'];
+			obj['Personal Bytes Now'] = localStats.byteCount;
+			obj['Personal Bytes Diff'] = obj['Personal Bytes Now'] - _byteInfo['Hold']['Personal Last'];
+			obj['Global Bytes Now'] = globalStats.usedBytes;
+			obj['Global Bytes Diff'] = obj['Global Bytes Now'] - _byteInfo['Hold']['Global Last'];
+			obj['Personal BPS'] = (obj['Personal Bytes Diff'] / obj['Time Diff']) * 1000;
+			obj['Global BPS'] = (obj['Global Bytes Diff'] / obj['Time Diff']) * 1000;
+		
+		_byteInfo['Personal'].splice(_byteInfo['Personal'].length-1,1);
+		_byteInfo['Global'].splice(_byteInfo['Global'].length-1,1);
+		_byteInfo['Personal'].unshift(obj['Personal BPS']);
+		_byteInfo['Global'].unshift(obj['Personal BPS']);
+		_byteInfo['Hold']['Personal Last'] = obj['Personal Bytes Now'];
+		_byteInfo['Hold']['Global Last'] = obj['Global Bytes Now'];
+		_byteInfo['Hold']['Time Last'] = obj['Time Now'];
 	}
 }
 
