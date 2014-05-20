@@ -1,4 +1,4 @@
-Datamonster v.1.2
+Datamonster v.1.3
 ======
 
 Datamonster is a JavaScript addon for [DripStat](https://dripstat.com/game/).
@@ -30,16 +30,20 @@ Features/Config Options
   * Changes some of the styling of DripStat's UI _(mainly just to make thing's fit better)_
 * __Use Datamonster's Tooltips__
   * Makes the store item/upgrade tooltips a little more detailed and 'screen-friendly'
-* __Show Personal Income Averages__
-  * Creates a small display underneath the top progress bar to show averages of how much memory you are making every 1 Second, 10 Seconds, 30 Seconds, and 1 Minute
-* __Calculate "Time Left" From 10 Second Average__
-  * Calculates the time left (displayed on Datamonster's bottom bar & tooltips) based on the '10 Second' personal income average 
 * __Color-Code Store Items__
   * Colors all store items/upgrades to reflect their cost per income
     * __Green__ _(best)_ - Has the best cost per income
     * __Yellow__ _(good)_ - Closer to the best than it is to the worst cost per income
     * __Orange__ _(bad)_ - Closer to the worst than it is to the best cost per income
     * __Red__ _(worst)_ - Has the worst cost per income
+* __Show Global Income Averages__
+  * Creates a small display underneath the global progress bar to show averages of how much memory is being dripped 1 Minute, 3 Minute, 5 Minute, and 10 Minute
+* __Show Personal Income Averages__
+  * Creates a small display underneath the top progress bar to show averages of how much memory you are making every 1 Second, 10 Seconds, 30 Seconds, and 1 Minute
+* __Calculate "Time Left" From 10 Second Average__
+  * Calculates the time left (displayed on Datamonster's bottom bar & tooltips) based on the '10 Second' personal income average
+* __Show Global Time Left__
+  * Calculates the time left before the current level finishes
 * __"Drip Memory" Confirmation__
   * Creates a confirmation window when clicking "Drip Memory" for you to answer Yes or No to dripping your memory
 * __Show "Player Scores" Tab__
