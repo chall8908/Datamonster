@@ -848,14 +848,14 @@ function Grab_Average(n, type){
 }
 
 function Calculate_Estimates(){
-	if(_byteArrayCnt >= 9){
+	_byteArrayCnt++;
+	if(_byteArrayCnt >= 10){
 		_byteArrayCnt = 0;
 		_byteArray.splice(_byteArray.length-1,1);
 		_byteArrayGlobal.splice(_byteArrayGlobal.length-1,1);
 		_byteArray.unshift(localStats.byteCount);
 		_byteArrayGlobal.unshift(globalStats.usedBytes);
 	}
-	_byteArrayCnt++;
 }
 
 function Calculate_Items(){
