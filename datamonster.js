@@ -870,7 +870,7 @@ function Calculate_Estimates(){
 		_byteInfo['Personal'].splice(_byteInfo['Personal'].length-1,1);
 		_byteInfo['Global'].splice(_byteInfo['Global'].length-1,1);
 		_byteInfo['Personal'].unshift(obj['Personal BPS']);
-		_byteInfo['Global'].unshift(obj['Personal BPS']);
+		_byteInfo['Global'].unshift(obj['Global BPS']);
 		_byteInfo['Hold']['Personal Last'] = obj['Personal Bytes Now'];
 		_byteInfo['Hold']['Global Last'] = obj['Global Bytes Now'];
 		_byteInfo['Hold']['Time Last'] = obj['Time Now'];
