@@ -43,7 +43,7 @@ Features/Config Options
 * __Calculate "Time Left" From 10 Second Average__
   * Calculates the time left (displayed on Datamonster's bottom bar & tooltips) based on the '10 Second' personal income average
 * __Show Global Time Left Estimate__
-  * Calculates an estimate of the time left before the current level finishes (displays on the global progress bar)
+  * Calculates an estimate of the time left before the current level finishes _(displays on the global progress bar)_
 * __"Drip Memory" Confirmation__
   * Creates a confirmation window when clicking "Drip Memory" for you to answer Yes or No to dripping your memory
 * __Show "Player Scores" Tab__
