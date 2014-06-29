@@ -1014,7 +1014,7 @@
 			  
 			  $('#DM_Item_Name_' + t).html(n + ' (<span style="color:#4bb8f0;">' + e.count + '</span>)');
 			  $('#DM_Item_Income_' + t).html(formatNum(e.currentBps) + '/s');
-			  $('#DM_Item_CPI_' + t).html('<span style="color:' + c[0] + '">' + formatNum(v) + '</span>');
+			  $('#DM_Item_CPI_' + t).html('<span style="color:' + c[0] + '">' + formatNum(v) + '</span>').attr('title', 'Weighted CPI: ' + formatNum(w));
 			  $('#DM_Item_Time_' + t).html('<span style="color:' + c[1] + '">' + formatTime(time, 'min') + '</span>');
 		  });
 	  } else {
