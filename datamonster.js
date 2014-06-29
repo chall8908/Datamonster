@@ -539,6 +539,10 @@ function Calc_Income_Bonus(desc){
 	return 0;
 }
 
+function Weight_CPI(cpi, time) {
+  return cpi + (cpi * (Math.pow(2, Math.pow(Math.E, time / 450) / 4000) - 1));
+}
+
 function Toggle_DM_Config(){
 	jQuery.each($($('.navbar-nav')[0]).children(), function(){
 		$(this).removeClass('active');
@@ -892,19 +896,7 @@ function Calculate_Items(){
 	
 // Regular Store Items
 	jQuery.each(items, function(i, o){ // index, object
-		var cpi = o.currentPrice/o.currentBps;
-		if(i == 0 || cpi < _storeInfo['CPI']['low']['val']){
-			_storeInfo['CPI']['low']['type'] = "pu";
-			_storeInfo['CPI']['low']['id'] = i;
-			_storeInfo['CPI']['low']['val'] = cpi;
-		}
-		if(cpi > _storeInfo['CPI']['high']['val']){
-			_storeInfo['CPI']['high']['type'] = "pu";
-			_storeInfo['CPI']['high']['id'] = i;
-			_storeInfo['CPI']['high']['val'] = cpi;
-		}
-		
-		var avgBps = ls.bps
+		var avgBps = ls.bps;
 		if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
 		var time = (o.currentPrice - ls.byteCount) / avgBps;
 		if(time < 0) { time = 0; }
@@ -920,23 +912,24 @@ function Calculate_Items(){
 				_storeInfo['Time']['high']['val'] = time;
 			}
 		}
-	});
-	
-// Store Upgrades
-	jQuery.each(ups, function(i, o){ // index, object
-		var cpi = o.price/Calc_Income_Bonus(o.desc);
-		if(cpi < _storeInfo['CPI']['low']['val']){
-			_storeInfo['CPI']['low']['type'] = "upg";
+
+		var cpi = o.currentPrice/o.currentBps;
+    var weightedCPI = Weight_CPI(cpi, time);
+		if(i == 0 || weightedCPI < _storeInfo['CPI']['low']['val']){
+			_storeInfo['CPI']['low']['type'] = "pu";
 			_storeInfo['CPI']['low']['id'] = i;
-			_storeInfo['CPI']['low']['val'] = cpi;
+			_storeInfo['CPI']['low']['val'] = weightedCPI;
 		}
-		if(cpi > _storeInfo['CPI']['high']['val']){
-			_storeInfo['CPI']['high']['type'] = "upg";
+		if(weightedCPI > _storeInfo['CPI']['high']['val']){
+			_storeInfo['CPI']['high']['type'] = "pu";
 			_storeInfo['CPI']['high']['id'] = i;
-			_storeInfo['CPI']['high']['val'] = cpi;
+			_storeInfo['CPI']['high']['val'] = weightedCPI;
 		}
-		
-		var avgBps = ls.bps
+	});
+
+  // Store Upgrades
+	jQuery.each(ups, function(i, o){ // index, object
+		var avgBps = ls.bps;
 		if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
 		var time = (o.price - ls.byteCount) / avgBps;
 		if(time < 0) { time = 0; }
@@ -951,6 +944,19 @@ function Calculate_Items(){
 				_storeInfo['Time']['high']['id'] = i;
 				_storeInfo['Time']['high']['val'] = time;
 			}
+		}
+
+		var cpi = o.price/Calc_Income_Bonus(o.desc);
+    var weightedCPI = Weight_CPI(cpi, time);
+		if(weightedCPI < _storeInfo['CPI']['low']['val']){
+			_storeInfo['CPI']['low']['type'] = "upg";
+			_storeInfo['CPI']['low']['id'] = i;
+			_storeInfo['CPI']['low']['val'] = weightedCPI;
+		}
+		if(weightedCPI > _storeInfo['CPI']['high']['val']){
+			_storeInfo['CPI']['high']['type'] = "upg";
+			_storeInfo['CPI']['high']['id'] = i;
+			_storeInfo['CPI']['high']['val'] = weightedCPI;
 		}
 	});
 }
@@ -988,11 +994,12 @@ function Update_Table(){
 			if(time < 0 ) { time = 0; }
 			var n = Get_Item_Name_Display(e.name);
 			var v = (e.currentPrice/e.currentBps);
+      var w = Weight_CPI(v, time);
 			var c = ['#FFFF00', '#FFFF00'];
 			
-			if(v <= _storeInfo['CPI']['low']['val']) { c[0] = '#00FF00'; }
-			else if(v >= _storeInfo['CPI']['high']['val']) { c[0] = '#FF0000'; }
-			else if(_storeInfo['CPI']['high']['val'] - v < v - _storeInfo['CPI']['low']['val']){ c[0] = "#FF7F00"; }
+			if(w <= _storeInfo['CPI']['low']['val']) { c[0] = '#00FF00'; }
+			else if(w >= _storeInfo['CPI']['high']['val']) { c[0] = '#FF0000'; }
+			else if(_storeInfo['CPI']['high']['val'] - w < w - _storeInfo['CPI']['low']['val']){ c[0] = "#FF7F00"; }
 			
 			if(time == 0) { c[1] = '#7ACBF4'; }
 			else if(time <= _storeInfo['Time']['low']['val']) { c[1] = '#00FF00'; }
