@@ -378,7 +378,7 @@
 		  var ele = $('#DM_Tooltip_Time_pu' + i);
 		  if(ele.length > 0){
 
-			  var avgBps = ls.bps
+			  var avgBps = ls.bps;
 			  if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
 			  var time = (o.currentPrice - ls.byteCount) / avgBps;
 			  if(time < 0) { time = 0; }
@@ -1071,6 +1071,8 @@
 	  if(n > 0 || r > 0 || i > 0 || s > 0) { u = u + s + o[3]; }
 	  return u;
   }
+
+  window.Update_Tooltip_Time = Update_Tooltip_Time;
 
   Load_Data_Monster();
 })();
