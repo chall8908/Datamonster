@@ -1,6 +1,6 @@
 ## v.1.4 _(6/28/2014)_
-* __Ignore Spring Framework__
-  * Automatically ignores Spring Framework upgrade when determining best upgrade when the player has no Spring Beans.
+* __CPI Weighting__
+  * Cost Per Income is now weighted based on the time it will take to accrue the required bits.
 
 ## v.1.3 _(5/20/14)_
 
