@@ -1,4 +1,4 @@
-var _version = 'v.1.3';
+var _version = 'v.1.4';
 var _DM_Data = new Object();
 var _storeInfo = new Object();
 var _byteInfo = new Object();
@@ -893,6 +893,10 @@ function Calculate_Items(){
 // Regular Store Items
 	jQuery.each(items, function(i, o){ // index, object
 		var cpi = o.currentPrice/o.currentBps;
+    // If we don't have any spring beans, we can't buy the spring framework.
+    if(o.name === 'Spring Framework' && $('#mineCount').text() === '0') {
+      cpi = Infinity;  // So, let's make sure it's always terrible
+    }
 		if(i == 0 || cpi < _storeInfo['CPI']['low']['val']){
 			_storeInfo['CPI']['low']['type'] = "pu";
 			_storeInfo['CPI']['low']['id'] = i;
