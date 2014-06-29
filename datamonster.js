@@ -538,6 +538,17 @@ function Calc_Income_Bonus(desc){
 	}
 	return 0;
 }
+/**
+ * Weights the CPI based on the time to accrue the required bits.
+ * The weighing algorithm is (2 ^ (( e ^ ( x / 450 )) / 4000) - 1
+ * where x is the time it will take to unlock the upgrade.
+ */
+function Weight_CPI(cpi, time) {
+  // I arrived at this algorithm purely through trial and error
+  // the purpose was to make upgrades that would take longer than an hour 'cost'
+  // more to the formula that determines what the 'best' upgrade is
+  return cpi + (cpi * (Math.pow(2, Math.pow(Math.E, time / 450) / 4000) - 1));
+}
 
 function Toggle_DM_Config(){
 	jQuery.each($($('.navbar-nav')[0]).children(), function(){
@@ -892,22 +903,6 @@ function Calculate_Items(){
 	
 // Regular Store Items
 	jQuery.each(items, function(i, o){ // index, object
-		var cpi = o.currentPrice/o.currentBps;
-    // If we don't have any spring beans, we can't buy the spring framework.
-    if(o.name === 'Spring Framework' && $('#mineCount').text() === '0') {
-      cpi = Infinity;  // So, let's make sure it's always terrible
-    }
-		if(i == 0 || cpi < _storeInfo['CPI']['low']['val']){
-			_storeInfo['CPI']['low']['type'] = "pu";
-			_storeInfo['CPI']['low']['id'] = i;
-			_storeInfo['CPI']['low']['val'] = cpi;
-		}
-		if(cpi > _storeInfo['CPI']['high']['val']){
-			_storeInfo['CPI']['high']['type'] = "pu";
-			_storeInfo['CPI']['high']['id'] = i;
-			_storeInfo['CPI']['high']['val'] = cpi;
-		}
-		
 		var avgBps = ls.bps;
 		if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
 		var time = (o.currentPrice - ls.byteCount) / avgBps;
@@ -924,22 +919,23 @@ function Calculate_Items(){
 				_storeInfo['Time']['high']['val'] = time;
 			}
 		}
+
+		var cpi = o.currentPrice/o.currentBps;
+    var weightedCPI = Weight_CPI(cpi, time);
+		if(i == 0 || weightedCPI < _storeInfo['CPI']['low']['val']){
+			_storeInfo['CPI']['low']['type'] = "pu";
+			_storeInfo['CPI']['low']['id'] = i;
+			_storeInfo['CPI']['low']['val'] = weightedCPI;
+		}
+		if(weightedCPI > _storeInfo['CPI']['high']['val']){
+			_storeInfo['CPI']['high']['type'] = "pu";
+			_storeInfo['CPI']['high']['id'] = i;
+			_storeInfo['CPI']['high']['val'] = weightedCPI;
+		}
 	});
 	
 // Store Upgrades
 	jQuery.each(ups, function(i, o){ // index, object
-		var cpi = o.price/Calc_Income_Bonus(o.desc);
-		if(cpi < _storeInfo['CPI']['low']['val']){
-			_storeInfo['CPI']['low']['type'] = "upg";
-			_storeInfo['CPI']['low']['id'] = i;
-			_storeInfo['CPI']['low']['val'] = cpi;
-		}
-		if(cpi > _storeInfo['CPI']['high']['val']){
-			_storeInfo['CPI']['high']['type'] = "upg";
-			_storeInfo['CPI']['high']['id'] = i;
-			_storeInfo['CPI']['high']['val'] = cpi;
-		}
-		
 		var avgBps = ls.bps;
 		if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
 		var time = (o.price - ls.byteCount) / avgBps;
@@ -955,6 +951,19 @@ function Calculate_Items(){
 				_storeInfo['Time']['high']['id'] = i;
 				_storeInfo['Time']['high']['val'] = time;
 			}
+		}
+
+		var cpi = o.price/Calc_Income_Bonus(o.desc);
+    var weightedCPI = Weight_CPI(cpi, time);
+		if(weightedCPI < _storeInfo['CPI']['low']['val']){
+			_storeInfo['CPI']['low']['type'] = "upg";
+			_storeInfo['CPI']['low']['id'] = i;
+			_storeInfo['CPI']['low']['val'] = weightedCPI;
+		}
+		if(weightedCPI > _storeInfo['CPI']['high']['val']){
+			_storeInfo['CPI']['high']['type'] = "upg";
+			_storeInfo['CPI']['high']['id'] = i;
+			_storeInfo['CPI']['high']['val'] = weightedCPI;
 		}
 	});
 }
