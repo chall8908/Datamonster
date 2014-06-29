@@ -78,7 +78,7 @@ function Load_Data_Monster(){
 	// this looks dumb, but it fixes an issue with pops
 	$('#DM_Player_Scores_Tab').bind("click", function(e){
 		if(e.isTrigger != 3){
-			$($('#DM_Player_Scores_Tab').parent().children()[2]).find('a').click()
+			$($('#DM_Player_Scores_Tab').parent().children()[2]).find('a').click();
 			$('#DM_Player_Scores_Tab').find('a').click();
 		}
 	});
@@ -782,7 +782,7 @@ function DM_Config_Display(){
 					+ '</div>'
 				+ '</div>'
 			+ '</div>'
-		+ '</div>'
+		+ '</div>';
 	return out + '</div>';
 }
 
@@ -908,7 +908,7 @@ function Calculate_Items(){
 			_storeInfo['CPI']['high']['val'] = cpi;
 		}
 		
-		var avgBps = ls.bps
+		var avgBps = ls.bps;
 		if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
 		var time = (o.currentPrice - ls.byteCount) / avgBps;
 		if(time < 0) { time = 0; }
@@ -940,7 +940,7 @@ function Calculate_Items(){
 			_storeInfo['CPI']['high']['val'] = cpi;
 		}
 		
-		var avgBps = ls.bps
+		var avgBps = ls.bps;
 		if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
 		var time = (o.price - ls.byteCount) / avgBps;
 		if(time < 0) { time = 0; }
@@ -967,7 +967,7 @@ function Make_Table(){
 		vars[0] += '<th align=middle id="DM_Item_Name_' + t + '" style="font-weight:bold;"></th>';
 		vars[1] += '<td align=middle id="DM_Item_Income_' + t + '"></td>';
 		vars[2] += '<td align=middle id="DM_Item_CPI_' + t + '"></td>';
-		vars[3] += '<td align=middle id="DM_Item_Time_' + t + '"></td>'
+		vars[3] += '<td align=middle id="DM_Item_Time_' + t + '"></td>';
 	});
 	
 	$("#DM_Bar").html(''
@@ -986,7 +986,7 @@ function Update_Table(){
 		var items = localStats.powerUps;		
 		items.forEach(function(e,t){
 			var time = 0;
-			var avgBps = localStats.bps
+			var avgBps = localStats.bps;
 			if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
 			if(e.currentPrice - localStats.byteCount > 0){ time = (e.currentPrice - localStats.byteCount) / avgBps; }
 			if(time < 0 ) { time = 0; }
@@ -1035,7 +1035,7 @@ function _sts(e, tf) {
 }
 
 function formatNum(e) {
-	return _sts(e, false).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+	return _sts(e, false).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 function formatTime(e, t) {
@@ -1060,5 +1060,5 @@ function formatTime(e, t) {
 	if(n > 0 || r > 0) { u = u + r + o[1]; }
 	if(n > 0 || r > 0 || i > 0) { u = u + i + o[2]; }
 	if(n > 0 || r > 0 || i > 0 || s > 0) { u = u + s + o[3]; }
-	return u
+	return u;
 }
