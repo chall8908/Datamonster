@@ -297,17 +297,17 @@
 		  _DM_Color_Items_Toggle = true;
 		  var pInfo = localStats.powerUps;
 		  var uInfo = storeUI.shownUpgrades;
-		  var type = [_storeInfo['CPI']['low']['type'], _storeInfo['CPI']['high']['type']];
-		  var id = [_storeInfo['CPI']['low']['id'], _storeInfo['CPI']['high']['id']];
-		  var val = [_storeInfo['CPI']['low']['val'], _storeInfo['CPI']['high']['val']];
-		  jQuery.each($('#powerupstore .storeItem'), function(i, e){
+		  var type = [_storeInfo['ROI']['low']['type'], _storeInfo['ROI']['high']['type']];
+		  var id = [_storeInfo['ROI']['low']['id'], _storeInfo['ROI']['high']['id']];
+		  var val = [_storeInfo['ROI']['low']['val'], _storeInfo['ROI']['high']['val']];
+		  $('#powerupstore .storeItem').each( function(i, e){
 			  Remove_Color_Classes(this);
 			  var cpi = pInfo[i].currentPrice/pInfo[i].currentBps;
 			  if(i == id[0] && type[0] == "pu"){
 				  $(this).addClass('DM_Item_Best');
 			  } else if(i == id[1] && type[1] == "pu"){
 				  $(this).addClass('DM_Item_Worst');
-			  } else if(_storeInfo['CPI']['high']['val'] - cpi < cpi - _storeInfo['CPI']['low']['val']){
+			  } else if(_storeInfo['ROI']['high']['val'] - cpi < cpi - _storeInfo['ROI']['low']['val']){
 				  $(this).addClass('DM_Item_Bad');
 			  } else {
 				  $(this).addClass('DM_Item_Avg');
@@ -320,7 +320,7 @@
 				  $(this).addClass('DM_Item_Best');
 			  } else if(i == id[1] && type[1] == "upg"){
 				  $(this).addClass('DM_Item_Worst');
-			  } else if(_storeInfo['CPI']['high']['val'] - cpi < cpi - _storeInfo['CPI']['low']['val']){
+			  } else if(_storeInfo['ROI']['high']['val'] - cpi < cpi - _storeInfo['ROI']['low']['val']){
 				  $(this).addClass('DM_Item_Bad');
 			  } else {
 				  $(this).addClass('DM_Item_Avg');
@@ -446,9 +446,9 @@
 		  var v = (pInfo.currentPrice/pInfo.currentBps);
 		  var c = '#FFFF00';
 		  
-		  if(v <= _storeInfo['CPI']['low']['val']) { c = '#00FF00'; }
-		  else if(v >= _storeInfo['CPI']['high']['val']) { c = '#FF0000'; }
-		  else if(_storeInfo['CPI']['high']['val'] - v < v - _storeInfo['CPI']['low']['val']){ c = "#FF7F00"; }
+		  if(v <= _storeInfo['ROI']['low']['val']) { c = '#00FF00'; }
+		  else if(v >= _storeInfo['ROI']['high']['val']) { c = '#FF0000'; }
+		  else if(_storeInfo['ROI']['high']['val'] - v < v - _storeInfo['ROI']['low']['val']){ c = "#FF7F00"; }
 			
 		  var ups = '';
 		  jQuery.each(pInfo.purchasedUpgrades, function(i, e){
@@ -473,9 +473,9 @@
 		  var v = (pInfo.price/bonus);
 		  var c = '#FFFF00';
 		  
-		  if(v <= _storeInfo['CPI']['low']['val']) { c = '#00FF00'; }
-		  else if(v >= _storeInfo['CPI']['high']['val']) { c = '#FF0000'; }
-		  else if(_storeInfo['CPI']['high']['val'] - v < v - _storeInfo['CPI']['low']['val']){ c = "#FF7F00"; }
+		  if(v <= _storeInfo['ROI']['low']['val']) { c = '#00FF00'; }
+		  else if(v >= _storeInfo['ROI']['high']['val']) { c = '#FF0000'; }
+		  else if(_storeInfo['ROI']['high']['val'] - v < v - _storeInfo['ROI']['low']['val']){ c = "#FF7F00"; }
 		  
 		  var out = '<div class="DM_Tooltip">'
 			      + '<div class="DM_Tooltip_Header">' + pInfo.name + '</div>'
@@ -542,12 +542,12 @@
    * The weighing algorithm is (2 ^ (( e ^ ( x / 450 )) / 4000) - 1
    * where x is the time it will take to unlock the upgrade.
    */
-  function Weight_CPI(cpi, time) {
-    // I arrived at this algorithm purely through trial and error
-    // the purpose was to make upgrades that would take longer than an hour 'cost'
-    // more to the formula that determines what the 'best' upgrade is
-    return cpi + (cpi * (Math.pow(2, Math.pow(Math.E, time / 450) / 4000) - 1));
-  }
+  // function Weight_CPI(cpi, time) {
+  //   // I arrived at this algorithm purely through trial and error
+  //   // the purpose was to make upgrades that would take longer than an hour 'cost'
+  //   // more to the formula that determines what the 'best' upgrade is
+  //   return cpi + (cpi * (Math.pow(2, Math.pow(Math.E, time / 450) / 4000) - 1));
+  // }
 
   function Toggle_DM_Config(){
 	  jQuery.each($($('.navbar-nav')[0]).children(), function(){
@@ -892,19 +892,33 @@
 	  var items = ls.powerUps;
 	  var ups = storeUI.shownUpgrades;
 	  
-	  _storeInfo['CPI'] = new Object();
-	  _storeInfo['CPI']['low'] = { type:"", id:0, val:0 };
-	  _storeInfo['CPI']['high'] = { type:"", id:0, val:0 };
+	  _storeInfo['ROI'] = {
+      low : { type:"", id:0, val:0 },
+      high: { type:"", id:0, val:0 }
+    };
 	  
-	  _storeInfo['Time'] = new Object();
-	  _storeInfo['Time']['low'] = { type:"", id:0, val:Number.MAX_VALUE };
-	  _storeInfo['Time']['high'] = { type:"", id:0, val:0 };
+	  _storeInfo['Time'] = {
+      low : { type:"", id:0, val: Infinity },
+      high: { type:"", id:0, val:0 }
+    };
 	  
     // Regular Store Items
-	  jQuery.each(items, function(i, o){ // index, object
+	  jQuery.each(items, function(i, item){
 		  var avgBps = ls.bps;
 		  if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
-		  var time = (o.currentPrice - ls.byteCount) / avgBps;
+      var totalCost = item.currentPrice;
+      // if the item costs more than we have capacity for, add the missing
+      // capacity to its cost
+      if(totalCost > ls.memoryCapacity) {
+        // But, if we're already over what it would need, we'll have to drip more
+        if(totalCost - ls.memoryCapacity > ls.byteCount) {
+          totalCost += totalCost - ls.memoryCapacity;
+        } else {
+          // If so, add what we'd have to drip instead
+          totalCost += ls.byteCount;
+        }
+      }
+		  var time = (totalCost - ls.byteCount) / avgBps;
 		  if(time < 0) { time = 0; }
 		  if(time != 0){
 			  if(i == 0 || time < _storeInfo['Time']['low']['val']){
@@ -919,25 +933,32 @@
 			  }
 		  }
 
-		  var cpi = o.currentPrice/o.currentBps;
-      var weightedCPI = Weight_CPI(cpi, time);
-		  if(i == 0 || weightedCPI < _storeInfo['CPI']['low']['val']){
-			  _storeInfo['CPI']['low']['type'] = "pu";
-			  _storeInfo['CPI']['low']['id'] = i;
-			  _storeInfo['CPI']['low']['val'] = weightedCPI;
+		  var roi = totalCost/item.currentBps;
+		  if(i == 0 || roi < _storeInfo['ROI']['low']['val']){
+			  _storeInfo['ROI']['low']['type'] = "pu";
+			  _storeInfo['ROI']['low']['id'] = i;
+			  _storeInfo['ROI']['low']['val'] = roi;
 		  }
-		  if(weightedCPI > _storeInfo['CPI']['high']['val']){
-			  _storeInfo['CPI']['high']['type'] = "pu";
-			  _storeInfo['CPI']['high']['id'] = i;
-			  _storeInfo['CPI']['high']['val'] = weightedCPI;
+		  if(roi > _storeInfo['ROI']['high']['val']){
+			  _storeInfo['ROI']['high']['type'] = "pu";
+			  _storeInfo['ROI']['high']['id'] = i;
+			  _storeInfo['ROI']['high']['val'] = roi;
 		  }
 	  });
 	  
     // Store Upgrades
-	  jQuery.each(ups, function(i, o){ // index, object
+	  jQuery.each(ups, function(i, item) {
 		  var avgBps = ls.bps;
 		  if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
-		  var time = (o.price - ls.byteCount) / avgBps;
+      var totalCost = item.price;
+      if(totalCost > ls.memoryCapacity) {
+        if(totalCost - ls.memoryCapacity > ls.byteCount) {
+          totalCost += totalCost - ls.memoryCapacity;
+        } else {
+          totalCost += ls.byteCount;
+        }
+      }
+		  var time = (totalCost - ls.byteCount) / avgBps;
 		  if(time < 0) { time = 0; }
 		  if(time != 0){
 			  if(time < _storeInfo['Time']['low']['val']){
@@ -952,17 +973,16 @@
 			  }
 		  }
 
-		  var cpi = o.price/Calc_Income_Bonus(o.desc);
-      var weightedCPI = Weight_CPI(cpi, time);
-		  if(weightedCPI < _storeInfo['CPI']['low']['val']){
-			  _storeInfo['CPI']['low']['type'] = "upg";
-			  _storeInfo['CPI']['low']['id'] = i;
-			  _storeInfo['CPI']['low']['val'] = weightedCPI;
+		  var roi = totalCost/Calc_Income_Bonus(item.desc);
+		  if(roi < _storeInfo['ROI']['low']['val']){
+			  _storeInfo['ROI']['low']['type'] = "upg";
+			  _storeInfo['ROI']['low']['id'] = i;
+			  _storeInfo['ROI']['low']['val'] = roi;
 		  }
-		  if(weightedCPI > _storeInfo['CPI']['high']['val']){
-			  _storeInfo['CPI']['high']['type'] = "upg";
-			  _storeInfo['CPI']['high']['id'] = i;
-			  _storeInfo['CPI']['high']['val'] = weightedCPI;
+		  if(roi > _storeInfo['ROI']['high']['val']){
+			  _storeInfo['ROI']['high']['type'] = "upg";
+			  _storeInfo['ROI']['high']['id'] = i;
+			  _storeInfo['ROI']['high']['val'] = roi;
 		  }
 	  });
   }
@@ -982,7 +1002,7 @@
 		                  + '<table style="width:100%; table-layout:fixed;">'
 			                + '<tr>' + vars[0] + '</tr>'
 			                + '<tr><td align=right style="color:#4bb8f0;">Income</td>' + vars[1] + "</tr>"
-			                + '<tr><td align=right style="color:#4bb8f0;">Cost Per Income</td>' + vars[2] + "</tr>"
+			                + '<tr><td align=right style="color:#4bb8f0;cursor:help" title="Return on Investment">RoI</td>' + vars[2] + "</tr>"
 			                + '<tr><td align=right style="color:#4bb8f0;">Time Left</td>' + vars[3] + "</tr>"
 		                  + "</table>"
 	                    + '');
@@ -991,21 +1011,31 @@
   function Update_Table(){
 	  if(_DM_Data['Show Bottom Bar']){
 		  if(!$('#DM_Bar').is(":visible")) { $('#DM_Bar').fadeIn(100); $("body").css('margin-bottom','72px'); }
-		  var items = localStats.powerUps;		
-		  items.forEach(function(e,t){
+      var ls = localStats;
+		  var items = ls.powerUps;
+		  items.forEach(function(item,t){
 			  var time = 0;
-			  var avgBps = localStats.bps;
+			  var avgBps = ls.bps;
 			  if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
-			  if(e.currentPrice - localStats.byteCount > 0){ time = (e.currentPrice - localStats.byteCount) / avgBps; }
+			  if(item.currentPrice - ls.byteCount > 0){ time = (item.currentPrice - ls.byteCount) / avgBps; }
 			  if(time < 0 ) { time = 0; }
-			  var n = Get_Item_Name_Display(e.name); // name
-			  var v = (e.currentPrice/e.currentBps); // value
-        var w = Weight_CPI(v, time);           // weight
+			  var n = Get_Item_Name_Display(item.name); // name
+        var cost = item.currentPrice;
+        if(cost > ls.memoryCapacity) {
+          // But, if we're already over what it would need, we'll have to drip more
+          if(cost - ls.memoryCapacity > ls.byteCount) {
+            cost += cost - ls.memoryCapacity;
+          } else {
+            // If so, add what we'd have to drip instead
+            cost += ls.byteCount;
+          }
+        }
+			  var v = (cost/item.currentBps); // value
 			  var c = ['#FFFF00', '#FFFF00'];
 			  
-			  if(w <= _storeInfo['CPI']['low']['val']) { c[0] = '#00FF00'; }
-			  else if(w >= _storeInfo['CPI']['high']['val']) { c[0] = '#FF0000'; }
-			  else if(_storeInfo['CPI']['high']['val'] - w < w - _storeInfo['CPI']['low']['val']){ c[0] = "#FF7F00"; }
+			  if(v <= _storeInfo['ROI']['low']['val']) { c[0] = '#00FF00'; }
+			  else if(v >= _storeInfo['ROI']['high']['val']) { c[0] = '#FF0000'; }
+			  else if(_storeInfo['ROI']['high']['val'] - v < v - _storeInfo['ROI']['low']['val']){ c[0] = "#FF7F00"; }
 			  
 			  if(time == 0) { c[1] = '#7ACBF4'; }
 			  else if(time <= _storeInfo['Time']['low']['val']) { c[1] = '#00FF00'; }
@@ -1014,7 +1044,7 @@
 			  
 			  $('#DM_Item_Name_' + t).html(n + ' (<span style="color:#4bb8f0;">' + e.count + '</span>)');
 			  $('#DM_Item_Income_' + t).html(formatNum(e.currentBps) + '/s');
-			  $('#DM_Item_CPI_' + t).html('<span style="color:' + c[0] + '">' + formatNum(v) + '</span>').attr('title', 'Weighted CPI: ' + formatNum(w));
+			  $('#DM_Item_CPI_' + t).html('<span style="color:' + c[0] + '">' + formatTime(v, 'min') + '</span>');
 			  $('#DM_Item_Time_' + t).html('<span style="color:' + c[1] + '">' + formatTime(time, 'min') + '</span>');
 		  });
 	  } else {
@@ -1047,28 +1077,35 @@
 	  return _sts(e, false).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 
-  function formatTime(e, t) {
-	  e = Math.round(e);
-	  if (e == Infinity) { return "calculating..."; }
-	  if (e == 0 && t == 'min') { return "Done!"; }
-	  else if (e == 0) { return "0 seconds"; }
-	  if (e / 86400 > 1e3) { return "> 1,000 days"; }
-	  var n = parseInt(e / 86400) % 999;
-	  var r = parseInt(e / 3600) % 24;
-	  var i = parseInt(e / 60) % 60;
-	  var s = e % 60;
-	  var o = new Array(" days, ", " hours, ", " minutes, ", " seconds");
+  function formatTime(time, t) {
+	  time = Math.round(time);
+	  if (time == Infinity) { return "calculating..."; }
+	  if (time == 0 && t == 'min') { return "Done!"; }
+	  else if (time == 0) { return "0 seconds"; }
+	  if (time / 86400 > 1e3) { return "> 1,000 days"; }
+	  var days = parseInt(time / 86400) % 999;
+	  var hours  = parseInt(time / 3600) % 24;
+	  var minutes = parseInt(time / 60) % 60;
+	  var seconds = time % 60;
+	  var types = [" days, ", " hours, ", " minutes, ", " seconds"];
 	  if (t != "min") {
-		  if (n == 1) { o[0] = " day, "; }
-		  if (r == 1) { o[1] = " hour, "; }
-		  if (i == 1) { o[2] = " minute, "; }
-		  if (s == 1) { o[3] = " second"; }
-	  } else { o = new Array("d, ", "h, ", "m, ", "s"); }
+		  if (days == 1) { types[0] = " day, "; }
+		  if (hours == 1) { types[1] = " hour, "; }
+		  if (minutes == 1) { types[2] = " minute, "; }
+		  if (seconds == 1) { types[3] = " second"; }
+	  } else { types = ["d, ", "h, ", "m, ", "s"]; }
 	  var u = '';
-	  if(n > 0) { u = u + n + o[0]; }
-	  if(n > 0 || r > 0) { u = u + r + o[1]; }
-	  if(n > 0 || r > 0 || i > 0) { u = u + i + o[2]; }
-	  if(n > 0 || r > 0 || i > 0 || s > 0) { u = u + s + o[3]; }
+    // fallthrough intentional
+    switch(true) {
+      case days > 0:
+        u += days + types[0];
+      case hours > 0:
+        u += hours + types[1];
+      case minutes > 0:
+        u += minutes + types[2];
+      case seconds > 0:
+        u += seconds + types[3];
+    }
 	  return u;
   }
 
