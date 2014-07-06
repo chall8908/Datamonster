@@ -485,7 +485,7 @@
 			      + '<div class="DM_Tooltip_Footer">-' + formatNum(pInfo.price) + '</div>'
 			      + '<div class="DM_Tooltip_Income">+' + formatNum(bonus) + '/s</div>'
 			      + '<div class="DM_Tooltip_Time" id="DM_Tooltip_Time_upg' + id + '">&nbsp;</div>'
-			      + '<div class="DM_Tooltip_CPI" style="color:' + c + ';">' + formatNum(v) + '</div>'
+			      + '<div class="DM_Tooltip_CPI" style="color:' + c + ';">' + formatTime(v, 'min') + '</div>'
 		        + '</div>';
 
 	  }
