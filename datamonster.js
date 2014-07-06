@@ -465,7 +465,7 @@
 			      + '<div class="DM_Tooltip_Footer">-' + formatNum(pInfo.currentPrice) + '</div>'
 			      + '<div class="DM_Tooltip_Income">+' + formatNum(pInfo.currentBps) + '/s</div>'
 			      + '<div class="DM_Tooltip_Time" id="DM_Tooltip_Time_pu' + id + '">&nbsp;</div>'
-			      + '<div class="DM_Tooltip_CPI" style="color:' + c + ';">' + formatNum(v) + '</div>'
+			      + '<div class="DM_Tooltip_CPI" style="color:' + c + ';">' + formatTime(v, 'min') + '</div>'
 		        + '</div>';
 	  } else {
 		  var bonus = Calc_Income_Bonus(pInfo.desc);
