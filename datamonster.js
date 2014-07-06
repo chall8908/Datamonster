@@ -1042,8 +1042,8 @@
 			  else if(time >= _storeInfo['Time']['high']['val']) { c[1] = '#FF0000'; }
 			  else if(_storeInfo['Time']['high']['val'] - time < time - _storeInfo['Time']['low']['val']){ c[1] = "#FF7F00"; }
 			  
-			  $('#DM_Item_Name_' + t).html(n + ' (<span style="color:#4bb8f0;">' + e.count + '</span>)');
-			  $('#DM_Item_Income_' + t).html(formatNum(e.currentBps) + '/s');
+			  $('#DM_Item_Name_' + t).html(n + ' (<span style="color:#4bb8f0;">' + item.count + '</span>)');
+			  $('#DM_Item_Income_' + t).html(formatNum(item.currentBps) + '/s');
 			  $('#DM_Item_CPI_' + t).html('<span style="color:' + c[0] + '">' + formatTime(v, 'min') + '</span>');
 			  $('#DM_Item_Time_' + t).html('<span style="color:' + c[1] + '">' + formatTime(time, 'min') + '</span>');
 		  });
