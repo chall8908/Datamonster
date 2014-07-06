@@ -537,17 +537,25 @@
 	  }
 	  return 0;
   }
-  /**
-   * Weights the CPI based on the time to accrue the required bits.
-   * The weighing algorithm is (2 ^ (( e ^ ( x / 450 )) / 4000) - 1
-   * where x is the time it will take to unlock the upgrade.
-   */
-  // function Weight_CPI(cpi, time) {
-  //   // I arrived at this algorithm purely through trial and error
-  //   // the purpose was to make upgrades that would take longer than an hour 'cost'
-  //   // more to the formula that determines what the 'best' upgrade is
-  //   return cpi + (cpi * (Math.pow(2, Math.pow(Math.E, time / 450) / 4000) - 1));
-  // }
+
+  function Get_Total_Cost(item) {
+    var ls = localStats,
+        cost = item.currentPrice || item.price;
+
+    // if the item costs more than we have capacity for, add the missing
+    // capacity to its cost
+    if(cost > ls.memoryCapacity) {
+      // But, if we're already over what it would need, we'll have to drip more
+      if(cost - ls.memoryCapacity > ls.byteCount) {
+        cost += cost - ls.memoryCapacity;
+      } else {
+        // If so, add what we'd have to drip instead
+        cost += ls.byteCount;
+      }
+    }
+
+    return cost;
+  }
 
   function Toggle_DM_Config(){
 	  jQuery.each($($('.navbar-nav')[0]).children(), function(){
@@ -901,23 +909,13 @@
       low : { type:"", id:0, val: Infinity },
       high: { type:"", id:0, val:0 }
     };
-	  
+
     // Regular Store Items
 	  jQuery.each(items, function(i, item){
 		  var avgBps = ls.bps;
 		  if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
-      var totalCost = item.currentPrice;
-      // if the item costs more than we have capacity for, add the missing
-      // capacity to its cost
-      if(totalCost > ls.memoryCapacity) {
-        // But, if we're already over what it would need, we'll have to drip more
-        if(totalCost - ls.memoryCapacity > ls.byteCount) {
-          totalCost += totalCost - ls.memoryCapacity;
-        } else {
-          // If so, add what we'd have to drip instead
-          totalCost += ls.byteCount;
-        }
-      }
+      var totalCost = Get_Total_Cost(item);
+
 		  var time = (totalCost - ls.byteCount) / avgBps;
 		  if(time < 0) { time = 0; }
 		  if(time != 0){
@@ -950,14 +948,7 @@
 	  jQuery.each(ups, function(i, item) {
 		  var avgBps = ls.bps;
 		  if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
-      var totalCost = item.price;
-      if(totalCost > ls.memoryCapacity) {
-        if(totalCost - ls.memoryCapacity > ls.byteCount) {
-          totalCost += totalCost - ls.memoryCapacity;
-        } else {
-          totalCost += ls.byteCount;
-        }
-      }
+      var totalCost = Get_Total_Cost(item);
 		  var time = (totalCost - ls.byteCount) / avgBps;
 		  if(time < 0) { time = 0; }
 		  if(time != 0){
@@ -1017,19 +1008,10 @@
 			  var time = 0;
 			  var avgBps = ls.bps;
 			  if(_DM_Data['Time Left Average']){ avgBps = Grab_Average(10,true); }
-			  if(item.currentPrice - ls.byteCount > 0){ time = (item.currentPrice - ls.byteCount) / avgBps; }
+        var cost = Get_Total_Cost(item);
+			  if(cost - ls.byteCount > 0){ time = (cost - ls.byteCount) / avgBps; }
 			  if(time < 0 ) { time = 0; }
 			  var n = Get_Item_Name_Display(item.name); // name
-        var cost = item.currentPrice;
-        if(cost > ls.memoryCapacity) {
-          // But, if we're already over what it would need, we'll have to drip more
-          if(cost - ls.memoryCapacity > ls.byteCount) {
-            cost += cost - ls.memoryCapacity;
-          } else {
-            // If so, add what we'd have to drip instead
-            cost += ls.byteCount;
-          }
-        }
 			  var v = (cost/item.currentBps); // value
 			  var c = ['#FFFF00', '#FFFF00'];
 			  
